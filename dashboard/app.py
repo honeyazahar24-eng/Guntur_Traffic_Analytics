@@ -83,9 +83,33 @@ except ImportError:
 
 
 # ============================================================
+# Background Collector Thread for Cloud Deployment
+# ============================================================
+import threading
+import schedule
+
+if "cloud_scheduler_started" not in st.session_state:
+    st.session_state.cloud_scheduler_started = True
+    def _bg_collection_loop():
+        try:
+            from scripts.scheduler import run_collection
+            schedule.every().hour.at(":00").do(run_collection)
+            schedule.every().hour.at(":30").do(run_collection)
+            while True:
+                schedule.run_pending()
+                time.sleep(5)
+        except Exception:
+            pass
+
+    _t = threading.Thread(target=_bg_collection_loop, daemon=True)
+    _t.start()
+
+
+# ============================================================
 # Page Configuration
 # ============================================================
 st.set_page_config(
+
     page_title=APP_TITLE,
     page_icon=PAGE_ICON,
     layout=LAYOUT,

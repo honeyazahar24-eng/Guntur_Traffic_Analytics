@@ -1,0 +1,110 @@
+import sqlite3
+from pathlib import Path
+
+
+class TrafficDatabase:
+
+    def __init__(self):
+
+        project_root = Path(__file__).resolve().parent.parent
+
+        db_path = project_root / "database" / "traffic.db"
+
+        self.connection = sqlite3.connect(db_path)
+
+        self.cursor = self.connection.cursor()
+
+        self.create_table()
+
+    def create_table(self):
+
+        self.cursor.execute("""
+
+        CREATE TABLE IF NOT EXISTS traffic_data (
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            collection_date TEXT,
+
+            collection_time TEXT,
+
+            day_name TEXT,
+
+            hour INTEGER,
+
+            corridor_id INTEGER,
+
+            direction TEXT,
+
+            origin_name TEXT,
+
+            destination_name TEXT,
+
+            distance_km REAL,
+
+            duration_seconds INTEGER,
+
+            average_speed_kmph REAL
+
+        )
+
+        """)
+
+        self.connection.commit()
+
+    def insert_record(
+        self,
+        collection_date,
+        collection_time,
+        day_name,
+        hour,
+        corridor_id,
+        direction,
+        origin_name,
+        destination_name,
+        distance_km,
+        duration_seconds,
+        average_speed_kmph
+    ):
+
+        self.cursor.execute("""
+
+        INSERT INTO traffic_data(
+
+            collection_date,
+            collection_time,
+            day_name,
+            hour,
+            corridor_id,
+            direction,
+            origin_name,
+            destination_name,
+            distance_km,
+            duration_seconds,
+            average_speed_kmph
+
+        )
+
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+
+        """, (
+
+            collection_date,
+            collection_time,
+            day_name,
+            hour,
+            corridor_id,
+            direction,
+            origin_name,
+            destination_name,
+            distance_km,
+            duration_seconds,
+            average_speed_kmph
+
+        ))
+
+        self.connection.commit()
+
+    def close(self):
+
+        self.connection.close()

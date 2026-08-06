@@ -133,6 +133,8 @@ class CongestionAnalyzer:
     def corridor_congestion_lengths(df: pd.DataFrame, threshold_speed: float = 25.0) -> pd.DataFrame:
         """
         Calculate congestion length and metrics for each individual corridor.
+        Uses latest distance_km for accurate current corridor length and
+        calculates proportional congested segment length.
         """
         if df.empty:
             return pd.DataFrame()
@@ -140,10 +142,11 @@ class CongestionAnalyzer:
         rush_df = CongestionAnalyzer.filter_rush_hours(df)
         eval_df = rush_df if not rush_df.empty else df
 
-        summary = eval_df.groupby("corridor_id", as_index=False).agg(
-            Origin=("origin_name", "first"),
-            Destination=("destination_name", "first"),
-            Corridor_Length_Km=("distance_km", "mean"),
+        # Get latest distance per corridor and peak speed
+        summary = eval_df.sort_values(["collection_date", "collection_time"]).groupby("corridor_id", as_index=False).agg(
+            Origin=("origin_name", "last"),
+            Destination=("destination_name", "last"),
+            Corridor_Length_Km=("distance_km", "last"),
             Peak_Speed_Kmph=("average_speed_kmph", "mean")
         )
 
@@ -151,15 +154,19 @@ class CongestionAnalyzer:
         summary["Peak_Speed_Kmph"] = summary["Peak_Speed_Kmph"].round(1)
 
         # Congestion Index 0-10 per corridor
-        summary["Congestion_Scale_0_10"] = (
-            (CongestionAnalyzer.FREE_FLOW_SPEED - summary["Peak_Speed_Kmph"]) / CongestionAnalyzer.FREE_FLOW_SPEED * 10.0
-        ).clip(lower=0.0, upper=10.0).round(1)
+        summary["Congestion_Ratio"] = (
+            (CongestionAnalyzer.FREE_FLOW_SPEED - summary["Peak_Speed_Kmph"]) / CongestionAnalyzer.FREE_FLOW_SPEED
+        ).clip(lower=0.0, upper=1.0)
 
-        # Congested status & congested length (km)
+        summary["Congestion_Scale_0_10"] = (summary["Congestion_Ratio"] * 10.0).round(1)
+
+        # Proportional Congested Length (km) based on congestion ratio
+        summary["Congested_Length_Km"] = (summary["Corridor_Length_Km"] * summary["Congestion_Ratio"]).round(2)
+
+        # Congested flag (if peak speed under threshold)
         summary["Is_Congested"] = summary["Peak_Speed_Kmph"] < threshold_speed
-        summary["Congested_Length_Km"] = summary.apply(
-            lambda r: r["Corridor_Length_Km"] if r["Is_Congested"] else 0.0, axis=1
-        )
 
-        return summary.sort_values(by="Congestion_Scale_0_10", ascending=False)
+        drop_cols = ["Congestion_Ratio"]
+        return summary.drop(columns=drop_cols).sort_values(by="Congestion_Scale_0_10", ascending=False)
+
 

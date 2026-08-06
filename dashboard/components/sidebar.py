@@ -20,26 +20,38 @@ class Sidebar:
         st.sidebar.subheader("📡 Live Collector Status")
         status_file = Path(__file__).resolve().parent.parent.parent / "logs" / "scheduler_status.json"
         
+        last_run_str = None
+        next_run_str = None
+        status = "unknown"
+
         if status_file.exists():
             try:
                 with open(status_file, "r") as f:
                     sched_info = json.load(f)
-                
                 status = sched_info.get("status", "unknown")
-                if status == "success":
-                    st.sidebar.success(f"🟢 Active — Last run: {sched_info.get('last_run', 'N/A')}")
-                elif status == "running":
-                    st.sidebar.info("⏳ Data Collection in Progress...")
-                elif status == "error":
-                    st.sidebar.error("🔴 Collector Error — Check logs")
-                else:
-                    st.sidebar.warning("⚪ Scheduler Status Unknown")
-
-                st.sidebar.caption(f"⏰ **Next auto-collect:** {sched_info.get('next_run', 'Every 30 min (:00 & :30)')}")
+                last_run_str = sched_info.get("last_run")
+                next_run_str = sched_info.get("next_run")
             except Exception:
-                st.sidebar.caption("⏰ Auto-collect: Every 30 min (:00 & :30)")
+                pass
+
+        if not df.empty:
+            latest_row = df.sort_values(["collection_date", "collection_time"]).iloc[-1]
+            db_last_run = f"{latest_row['collection_date']} {latest_row['collection_time']}"
+            if not last_run_str or db_last_run > last_run_str:
+                last_run_str = db_last_run
+                status = "success"
+
+        if status == "success":
+            st.sidebar.success(f"🟢 Active — Last run: {last_run_str or 'N/A'}")
+        elif status == "running":
+            st.sidebar.info("⏳ Data Collection in Progress...")
+        elif status == "error":
+            st.sidebar.error("🔴 Collector Error — Check logs")
         else:
-            st.sidebar.caption("⏰ Auto-collect: Every 30 min (:00 & :30)")
+            st.sidebar.warning("⚪ Scheduler Status Unknown")
+
+        st.sidebar.caption(f"⏰ **Next auto-collect:** {next_run_str or 'Every 30 min (:00 & :30)'}")
+
 
         collect_now = st.sidebar.button(
             "⚡ Collect Data Now",

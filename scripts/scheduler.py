@@ -9,11 +9,15 @@ project_root = Path(__file__).resolve().parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 import time
 import json
 import schedule
 import traceback
 from datetime import datetime
+
 
 from scripts.collector import main as collect_data
 

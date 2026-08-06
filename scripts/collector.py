@@ -12,6 +12,11 @@ from services.google_routes import GoogleRoutesService
 from database.database import TrafficDatabase
 
 
+# Force UTF-8 stdout encoding on Windows
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
+
 def main():
 
     # Create objects
@@ -32,8 +37,9 @@ def main():
         result = google_service.get_route_data(route)
 
         if not result or "routes" not in result:
-            print(f"\n❌ Google API failed for Route {index + 1}")
+            print(f"\n[X] Google API failed for Route {index + 1}")
             continue
+
 
         # Extract Google API response
         distance_km = result["routes"][0]["distanceMeters"] / 1000

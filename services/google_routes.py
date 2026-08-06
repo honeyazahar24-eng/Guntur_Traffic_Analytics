@@ -55,6 +55,9 @@ class GoogleRoutesService:
             "routingPreference": "TRAFFIC_AWARE"
         }
 
+        import time
+        time.sleep(0.3)
+
         response = requests.post(
             self.url,
             headers=self.headers,
@@ -66,4 +69,4 @@ class GoogleRoutesService:
             print(response.text)
             return None
 
-        return response.json()
+        return response.json()

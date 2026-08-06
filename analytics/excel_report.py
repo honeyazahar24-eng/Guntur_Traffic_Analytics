@@ -122,42 +122,35 @@ def main():
         .apply(get_traffic_status)
     )
 
+    from dashboard.congestion import CongestionAnalyzer
+    rush_scale = CongestionAnalyzer.rush_hour_congestion_scale_0_10(raw_df)
+    extra_info = CongestionAnalyzer.extra_time_per_50km(raw_df)
+    net_info = CongestionAnalyzer.congested_road_network_pct(raw_df)
+    rush_corr_df = CongestionAnalyzer.corridor_congestion_lengths(raw_df)
+
     dashboard_df = pd.DataFrame({
-
         "Metric": [
-
             "Total Records",
-
             "Average Speed (km/h)",
-
             "Average Travel Time (sec)",
-
             "Fastest Corridor",
-
-            "Slowest Corridor"
-
+            "Slowest Corridor",
+            "Rush Hour Congestion Index (0-10)",
+            "Extra Time per 50 km Travelled (min)",
+            "Congested Road Network (%)",
+            "Congested Network Length (km)"
         ],
-
         "Value": [
-
             len(raw_df),
-
             round(raw_df["average_speed_kmph"].mean(), 2),
-
             round(raw_df["duration_seconds"].mean(), 0),
-
-            summary_df.loc[
-                summary_df["Average_Speed"].idxmax(),
-                "corridor_id"
-            ],
-
-            summary_df.loc[
-                summary_df["Average_Speed"].idxmin(),
-                "corridor_id"
-            ]
-
+            summary_df.loc[summary_df["Average_Speed"].idxmax(), "corridor_id"],
+            summary_df.loc[summary_df["Average_Speed"].idxmin(), "corridor_id"],
+            f"{rush_scale:.1f} / 10",
+            f"+{extra_info['extra_time_min']:.1f} min",
+            f"{net_info['congested_pct']:.1f}%",
+            f"{net_info['congested_length_km']:.2f} km"
         ]
-
     })
 
     with pd.ExcelWriter(
@@ -177,16 +170,23 @@ def main():
             index=False
         )
 
+        if not rush_corr_df.empty:
+            rush_corr_df.to_excel(
+                writer,
+                sheet_name="Rush Hour Breakdown",
+                index=False
+            )
+
         raw_df.to_excel(
             writer,
             sheet_name="Raw Traffic Data",
             index=False
         )
 
-        workbook = writer.book
-
         format_sheet(writer.sheets["Dashboard"])
         format_sheet(writer.sheets["Corridor Summary"])
+        if "Rush Hour Breakdown" in writer.sheets:
+            format_sheet(writer.sheets["Rush Hour Breakdown"])
         format_sheet(writer.sheets["Raw Traffic Data"])
 
     connection.close()
@@ -194,6 +194,7 @@ def main():
     print("\n" + "=" * 70)
     print("GUNTUR TRAFFIC REPORT GENERATED SUCCESSFULLY")
     print("=" * 70)
+
 
     print(f"\nSaved To:\n{report_path}")
 

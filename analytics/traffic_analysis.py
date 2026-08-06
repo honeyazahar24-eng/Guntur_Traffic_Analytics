@@ -87,8 +87,27 @@ def main():
     print(f"Destination  : {shortest[1]}")
     print(f"Distance     : {shortest[2]:.2f} km")
 
+    # Peak Rush Hour Analytics
+    from dashboard.data_loader import DataLoader
+    from dashboard.congestion import CongestionAnalyzer
+    loader = DataLoader()
+    df = loader.load_data()
+    if not df.empty:
+        rush_scale = CongestionAnalyzer.rush_hour_congestion_scale_0_10(df)
+        extra_info = CongestionAnalyzer.extra_time_per_50km(df)
+        net_info = CongestionAnalyzer.congested_road_network_pct(df)
+
+        print("\n" + "=" * 80)
+        print("    WEEKDAY PEAK RUSH HOUR CONGESTION METRICS (6-10 AM & 4-8 PM)")
+        print("=" * 80)
+        print(f"Rush Hour Congestion Index (0-10) : {rush_scale} / 10")
+        print(f"Extra Time Spent per 50 km        : +{extra_info['extra_time_min']:.1f} minutes (Total: {extra_info['peak_time_min']:.1f} min)")
+        print(f"Congested Road Network (%)        : {net_info['congested_pct']}% ({net_info['congested_length_km']} km of {net_info['total_network_km']} km)")
+        print(f"Congested Corridors Count         : {net_info['congested_corridors_count']} corridors operating under <25 km/h")
+        print("=" * 80)
+
     database.close()
 
 
 if __name__ == "__main__":
-    main()
+    main()

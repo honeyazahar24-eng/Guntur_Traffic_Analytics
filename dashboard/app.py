@@ -6,9 +6,12 @@ Real-time traffic monitoring using Google Routes API data
 import sys
 from pathlib import Path
 
-project_root = Path(__file__).resolve().parent.parent
+file_path = Path(__file__).resolve()
+project_root = file_path.parent.parent if file_path.parent.name == "dashboard" else file_path.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
+if str(file_path.parent) not in sys.path:
+    sys.path.insert(0, str(file_path.parent))
 
 import streamlit as st
 import pandas as pd
@@ -17,35 +20,66 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import time
 
-# Local imports
-from dashboard.data_loader import DataLoader
-from dashboard.analytics_engine import AnalyticsEngine
-from dashboard.filters import Filters
-from dashboard.components.header import Header
-from dashboard.components.kpi_cards import KPICards
-from dashboard.components.corridor_ranking import CorridorRanking
-from dashboard.components.traffic_status import TrafficStatus
-from dashboard.components.traffic_table import TrafficTable
-from dashboard.components.sidebar import Sidebar
-from dashboard.components.alerts import Alerts
-from dashboard.components.live_status import LiveStatus
-from dashboard.components.insights import InsightsComponent
-from dashboard.config import (
-    APP_TITLE, PAGE_ICON, LAYOUT, INITIAL_SIDEBAR_STATE,
-    CHART_HEIGHT, CHART_TEMPLATE, CHART_MARGIN,
-    NORMAL_SPEED, MODERATE_SPEED,
-    PRIMARY, SUCCESS, WARNING, DANGER, BACKGROUND
-)
-from dashboard.styles import Styles
-from dashboard.charts import (
-    create_speed_trend_chart,
-    create_travel_time_chart,
-    create_corridor_performance_chart,
-    create_hourly_speed_chart,
-    create_hourly_travel_time_chart,
-    create_daily_speed_chart,
-    create_speed_heatmap,
-)
+# Local imports with robust fallback
+try:
+    from dashboard.data_loader import DataLoader
+    from dashboard.analytics_engine import AnalyticsEngine
+    from dashboard.filters import Filters
+    from dashboard.components.header import Header
+    from dashboard.components.kpi_cards import KPICards
+    from dashboard.components.corridor_ranking import CorridorRanking
+    from dashboard.components.traffic_status import TrafficStatus
+    from dashboard.components.traffic_table import TrafficTable
+    from dashboard.components.sidebar import Sidebar
+    from dashboard.components.alerts import Alerts
+    from dashboard.components.live_status import LiveStatus
+    from dashboard.components.insights import InsightsComponent
+    from dashboard.config import (
+        APP_TITLE, PAGE_ICON, LAYOUT, INITIAL_SIDEBAR_STATE,
+        CHART_HEIGHT, CHART_TEMPLATE, CHART_MARGIN,
+        NORMAL_SPEED, MODERATE_SPEED,
+        PRIMARY, SUCCESS, WARNING, DANGER, BACKGROUND
+    )
+    from dashboard.styles import Styles
+    from dashboard.charts import (
+        create_speed_trend_chart,
+        create_travel_time_chart,
+        create_corridor_performance_chart,
+        create_hourly_speed_chart,
+        create_hourly_travel_time_chart,
+        create_daily_speed_chart,
+        create_speed_heatmap,
+    )
+except ImportError:
+    from data_loader import DataLoader
+    from analytics_engine import AnalyticsEngine
+    from filters import Filters
+    from components.header import Header
+    from components.kpi_cards import KPICards
+    from components.corridor_ranking import CorridorRanking
+    from components.traffic_status import TrafficStatus
+    from components.traffic_table import TrafficTable
+    from components.sidebar import Sidebar
+    from components.alerts import Alerts
+    from components.live_status import LiveStatus
+    from components.insights import InsightsComponent
+    from config import (
+        APP_TITLE, PAGE_ICON, LAYOUT, INITIAL_SIDEBAR_STATE,
+        CHART_HEIGHT, CHART_TEMPLATE, CHART_MARGIN,
+        NORMAL_SPEED, MODERATE_SPEED,
+        PRIMARY, SUCCESS, WARNING, DANGER, BACKGROUND
+    )
+    from styles import Styles
+    from charts import (
+        create_speed_trend_chart,
+        create_travel_time_chart,
+        create_corridor_performance_chart,
+        create_hourly_speed_chart,
+        create_hourly_travel_time_chart,
+        create_daily_speed_chart,
+        create_speed_heatmap,
+    )
+
 
 
 # ============================================================
@@ -230,6 +264,36 @@ with tab2:
 
     st.divider()
 
+    # Peak Rush Hour Congestion & Length Breakdown
+    st.markdown("#### 🔥 Weekday Peak Rush Hour Congestion & Length Analysis (6-10 AM & 4-8 PM)")
+    st.caption("Measures traffic flow, 0-10 congestion scale, and congested road lengths during peak hours.")
+    
+    cong_len_df = engine.corridor_congestion_lengths()
+    if not cong_len_df.empty:
+        st.dataframe(
+            cong_len_df,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "corridor_id": st.column_config.NumberColumn("Corridor ID", width="small"),
+                "Origin": st.column_config.TextColumn("Origin"),
+                "Destination": st.column_config.TextColumn("Destination"),
+                "Corridor_Length_Km": st.column_config.NumberColumn("Corridor Length (km)", format="%.2f km"),
+                "Peak_Speed_Kmph": st.column_config.NumberColumn("Peak Speed (km/h)", format="%.1f km/h"),
+                "Congestion_Scale_0_10": st.column_config.ProgressColumn(
+                    "Rush Hour Congestion (0-10)",
+                    format="%.1f / 10",
+                    min_value=0.0,
+                    max_value=10.0,
+                    help="0 = Free Flow, 10 = Severe Gridlock"
+                ),
+                "Is_Congested": st.column_config.CheckboxColumn("Congested? (<25 km/h)"),
+                "Congested_Length_Km": st.column_config.NumberColumn("Congested Length (km)", format="%.2f km"),
+            }
+        )
+
+    st.divider()
+
     # Direction comparison
     st.markdown("#### Direction Comparison")
     dir_summary = engine.direction_summary()
@@ -254,6 +318,7 @@ with tab2:
             yaxis_title="Average Speed (km/h)"
         )
         st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+
 
 
 # ============================================================

@@ -74,6 +74,26 @@ class AnalyticsEngine:
         )
 
     # ==========================================================
+    # Peak Rush Hour Congestion Metrics
+    # ==========================================================
+
+    def rush_hour_congestion_index_0_10(self):
+        from dashboard.congestion import CongestionAnalyzer
+        return CongestionAnalyzer.rush_hour_congestion_scale_0_10(self.df)
+
+    def extra_time_per_50km(self):
+        from dashboard.congestion import CongestionAnalyzer
+        return CongestionAnalyzer.extra_time_per_50km(self.df)
+
+    def congested_road_network_pct(self):
+        from dashboard.congestion import CongestionAnalyzer
+        return CongestionAnalyzer.congested_road_network_pct(self.df)
+
+    def corridor_congestion_lengths(self):
+        from dashboard.congestion import CongestionAnalyzer
+        return CongestionAnalyzer.corridor_congestion_lengths(self.df)
+
+    # ==========================================================
     # KPI Dictionary
     # ==========================================================
 
@@ -89,9 +109,16 @@ class AnalyticsEngine:
 
             "latest_date": self.latest_date(),
 
-            "active_routes": self.active_routes()
+            "active_routes": self.active_routes(),
+
+            "rush_hour_index_0_10": self.rush_hour_congestion_index_0_10(),
+
+            "extra_time_per_50km": self.extra_time_per_50km(),
+
+            "congested_network_pct": self.congested_road_network_pct(),
 
         }
+
 
     # ==========================================================
     # Latest Records

@@ -303,6 +303,7 @@ with tab2:
                 "Origin": st.column_config.TextColumn("Origin"),
                 "Destination": st.column_config.TextColumn("Destination"),
                 "Corridor_Length_Km": st.column_config.NumberColumn("Corridor Length (km)", format="%.2f km"),
+                "Free_Flow_Speed_Kmph": st.column_config.NumberColumn("Night Free-Flow Speed", format="%.1f km/h", help="Baseline speed measured from night-time (11 PM - 6 AM) collections"),
                 "Peak_Speed_Kmph": st.column_config.NumberColumn("Peak Speed (km/h)", format="%.1f km/h"),
                 "Congestion_Scale_0_10": st.column_config.ProgressColumn(
                     "Rush Hour Congestion (0-10)",
@@ -315,6 +316,7 @@ with tab2:
                 "Congested_Length_Km": st.column_config.NumberColumn("Congested Length (km)", format="%.2f km"),
             }
         )
+
 
     st.divider()
 

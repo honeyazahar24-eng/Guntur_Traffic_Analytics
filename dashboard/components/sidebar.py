@@ -50,8 +50,15 @@ class Sidebar:
         else:
             st.sidebar.warning("⚪ Scheduler Status Unknown")
 
-        st.sidebar.caption(f"⏰ **Next auto-collect:** {next_run_str or 'Every 30 min (:00 & :30)'}")
+        from datetime import datetime
+        now = datetime.now()
+        if now.minute < 30:
+            next_dt = now.replace(minute=30, second=0, microsecond=0)
+        else:
+            next_dt = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+        next_run_formatted = next_dt.strftime("%Y-%m-%d %H:%M:00")
 
+        st.sidebar.caption(f"⏰ **Next auto-collect:** {next_run_formatted}")
 
         collect_now = st.sidebar.button(
             "⚡ Collect Data Now",
@@ -133,6 +140,10 @@ class Sidebar:
             type="primary",
             help="Force refresh data from database"
         )
+        if refresh_clicked:
+            st.cache_data.clear()
+            st.rerun()
+
 
         st.sidebar.markdown("---")
 

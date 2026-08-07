@@ -146,7 +146,7 @@ if st.session_state.auto_refresh:
 # ============================================================
 # Load Data
 # ============================================================
-@st.cache_data(ttl=60, show_spinner="Loading traffic data...")
+@st.cache_data(ttl=15, show_spinner="Loading traffic data...")
 def load_data():
     loader = DataLoader()
     return loader.load_data()
@@ -165,8 +165,10 @@ if df.empty:
 corridor, direction, date_range, refresh_clicked = Sidebar.show(df)
 
 if refresh_clicked:
+    st.cache_data.clear()
     st.session_state.manual_refresh = True
     st.rerun()
+
 
 # Apply filters
 filtered_df = df.copy()

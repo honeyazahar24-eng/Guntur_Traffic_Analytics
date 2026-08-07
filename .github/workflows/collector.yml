@@ -2,7 +2,7 @@ name: Guntur Traffic 30-Min Auto-Collector
 
 on:
   schedule:
-        - cron: '14,44 * * * *'
+    - cron: '14,44 * * * *'
   workflow_dispatch:
 
 permissions:

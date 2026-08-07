@@ -83,13 +83,14 @@ except ImportError:
 
 
 # ============================================================
-# Background Collector Thread for Cloud Deployment
+# Background Collector Thread for Cloud Deployment (24/7)
 # ============================================================
 import threading
 import schedule
 
-if "cloud_scheduler_started" not in st.session_state:
-    st.session_state.cloud_scheduler_started = True
+if not getattr(sys, "_bg_scheduler_started", False):
+    sys._bg_scheduler_started = True
+
     def _bg_collection_loop():
         try:
             from scripts.scheduler import run_collection
@@ -103,6 +104,7 @@ if "cloud_scheduler_started" not in st.session_state:
 
     _t = threading.Thread(target=_bg_collection_loop, daemon=True)
     _t.start()
+
 
 
 # ============================================================

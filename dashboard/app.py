@@ -136,11 +136,13 @@ if st.session_state.get("manual_refresh", False):
     st.session_state.manual_refresh = False
     st.rerun()
 
-# Auto-refresh every 5 minutes
+# Auto-refresh every 30 seconds for real-time live updates
 if st.session_state.auto_refresh:
-    if time.time() - st.session_state.last_refresh > 300:
+    if time.time() - st.session_state.last_refresh > 30:
+        st.cache_data.clear()
         st.session_state.last_refresh = time.time()
         st.rerun()
+
 
 
 # ============================================================

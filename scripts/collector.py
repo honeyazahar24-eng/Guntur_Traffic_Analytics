@@ -5,7 +5,8 @@ project_root = Path(__file__).resolve().parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
 
 from utils.route_manager import RouteManager
 from services.google_routes import GoogleRoutesService
@@ -56,8 +57,10 @@ def main():
         else:
             average_speed = 0
 
-        # Current date and time
-        current_time = datetime.now()
+        # Current date and time in IST (Indian Standard Time, UTC+5:30)
+        ist_tz = timezone(timedelta(hours=5, minutes=30))
+        current_time = datetime.now(ist_tz)
+
 
         # Store in database
         database.insert_record(

@@ -40,8 +40,9 @@ class TrafficTable:
 
         display_df.columns = [
             "Date",
-            "Time",
+            "Time (IST)",
             "Corridor",
+
             "Direction",
             "Origin",
             "Destination",

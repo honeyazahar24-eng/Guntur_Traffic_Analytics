@@ -42,7 +42,7 @@ class Sidebar:
                 status = "success"
 
         if status == "success":
-            st.sidebar.success(f"🟢 Active — Last run: {last_run_str or 'N/A'}")
+            st.sidebar.success(f"🟢 Active — Last run: {last_run_str or 'N/A'} (IST)")
         elif status == "running":
             st.sidebar.info("⏳ Data Collection in Progress...")
         elif status == "error":
@@ -50,15 +50,17 @@ class Sidebar:
         else:
             st.sidebar.warning("⚪ Scheduler Status Unknown")
 
-        from datetime import datetime
-        now = datetime.now()
+        from datetime import datetime, timezone, timedelta
+        ist_tz = timezone(timedelta(hours=5, minutes=30))
+        now = datetime.now(ist_tz)
         if now.minute < 30:
             next_dt = now.replace(minute=30, second=0, microsecond=0)
         else:
             next_dt = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
         next_run_formatted = next_dt.strftime("%Y-%m-%d %H:%M:00")
 
-        st.sidebar.caption(f"⏰ **Next auto-collect:** {next_run_formatted}")
+        st.sidebar.caption(f"⏰ **Next auto-collect:** {next_run_formatted} (IST)")
+
 
         collect_now = st.sidebar.button(
             "⚡ Collect Data Now",

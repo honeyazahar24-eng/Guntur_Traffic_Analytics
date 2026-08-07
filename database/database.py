@@ -44,13 +44,36 @@ class TrafficDatabase:
 
             duration_seconds INTEGER,
 
-            average_speed_kmph REAL
+            average_speed_kmph REAL,
+
+            UNIQUE(collection_date, collection_time, corridor_id, direction) ON CONFLICT IGNORE
 
         )
 
         """)
 
+        self.cursor.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_traffic_unique 
+            ON traffic_data(collection_date, collection_time, corridor_id, direction)
+        """)
+
         self.connection.commit()
+        self.deduplicate()
+
+    def deduplicate(self):
+        """Clean up any existing duplicate records."""
+        try:
+            self.cursor.execute("""
+                DELETE FROM traffic_data
+                WHERE id NOT IN (
+                    SELECT MIN(id)
+                    FROM traffic_data
+                    GROUP BY collection_date, collection_time, corridor_id, direction
+                )
+            """)
+            self.connection.commit()
+        except Exception:
+            pass
 
     def insert_record(
         self,
@@ -69,7 +92,7 @@ class TrafficDatabase:
 
         self.cursor.execute("""
 
-        INSERT INTO traffic_data(
+        INSERT OR IGNORE INTO traffic_data(
 
             collection_date,
             collection_time,
@@ -107,4 +130,4 @@ class TrafficDatabase:
 
     def close(self):
 
-        self.connection.close()
+        self.connection.close()

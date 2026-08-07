@@ -16,7 +16,9 @@ import time
 import json
 import schedule
 import traceback
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+ist_tz = timezone(timedelta(hours=5, minutes=30))
 
 
 from scripts.collector import main as collect_data
@@ -26,12 +28,13 @@ STATUS_FILE.parent.mkdir(exist_ok=True)
 
 
 def write_status(status: str, message: str, last_count: int = 0):
+    now_ist = datetime.now(ist_tz)
     data = {
         "status": status,
         "message": message,
-        "last_run": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "last_run": now_ist.strftime("%Y-%m-%d %H:%M:%S IST"),
         "last_record_count": last_count,
-        "next_run": schedule.next_run().strftime("%Y-%m-%d %H:%M:%S") if schedule.next_run() else "N/A"
+        "next_run": schedule.next_run().strftime("%Y-%m-%d %H:%M:%S IST") if schedule.next_run() else "N/A"
     }
     with open(STATUS_FILE, "w") as f:
         json.dump(data, f, indent=2)
@@ -51,12 +54,13 @@ def read_db_count():
 
 
 def run_collection():
-    started_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    started_at = datetime.now(ist_tz).strftime("%Y-%m-%d %H:%M:%S IST")
     print(f"\n{'='*80}")
     print(f"  COLLECTION STARTED: {started_at}")
     print(f"{'='*80}")
 
     write_status("running", f"Collection in progress since {started_at}")
+
 
     try:
         collect_data()

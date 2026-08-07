@@ -20,18 +20,36 @@ class DataLoader:
         except Exception:
             connection = sqlite3.connect(self.database, timeout=30.0)
 
+        cursor = connection.cursor()
+
         query = """
-        SELECT *
+        SELECT 
+            id,
+            collection_date,
+            collection_time,
+            day_name,
+            hour,
+            corridor_id,
+            direction,
+            origin_name,
+            destination_name,
+            distance_km,
+            duration_seconds,
+            average_speed_kmph
         FROM traffic_data
         ORDER BY collection_date DESC,
                  collection_time DESC
         """
 
         try:
-            df = pd.read_sql_query(query, connection)
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            columns = [desc[0] for desc in cursor.description]
+            df = pd.DataFrame(rows, columns=columns)
         except Exception:
-            df = pd.read_sql(query, connection)
+            df = pd.DataFrame()
+        finally:
+            connection.close()
 
-        connection.close()
-
-        return df
+        return df
+

@@ -131,7 +131,71 @@ def main():
     print("Traffic Collection Completed Successfully")
     print("=" * 80)
 
+    # Attempt automatic push to GitHub if GH_PAT is present
+    push_db_to_github()
+
+
+def push_db_to_github():
+    """Push updated traffic.db to GitHub repository via REST API if token is configured."""
+    try:
+        import base64
+        import urllib.request
+        import json
+        import os
+
+        token = os.environ.get("GH_PAT") or os.environ.get("GITHUB_TOKEN")
+        if not token:
+            try:
+                import streamlit as st
+                token = st.secrets.get("GH_PAT")
+            except Exception:
+                token = None
+
+        if not token:
+            return
+
+        owner = "honeyazahar24-eng"
+        repo = "Guntur_Traffic_Analytics"
+        db_path = project_root / "database" / "traffic.db"
+        if not db_path.exists():
+            return
+
+        url = f"https://api.github.com/repos/{owner}/{repo}/contents/database/traffic.db"
+        headers = {
+            "Authorization": f"token {token}",
+            "Accept": "application/vnd.github.v3+json",
+            "User-Agent": "Guntur-Traffic-Collector"
+        }
+
+        sha = None
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+                sha = data.get("sha")
+        except Exception:
+            pass
+
+        content_b64 = base64.b64encode(db_path.read_bytes()).decode('utf-8')
+        payload = {
+            "message": "Auto-updated traffic.db from Cloud Collector [skip ci]",
+            "content": content_b64,
+            "branch": "main"
+        }
+        if sha:
+            payload["sha"] = sha
+
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode('utf-8'),
+            headers=headers,
+            method="PUT"
+        )
+        with urllib.request.urlopen(req) as resp:
+            print("Successfully auto-committed updated traffic.db to GitHub via API!")
+    except Exception as e:
+        print(f"GitHub API push notice: {e}")
 
 
 if __name__ == "__main__":
-    main()
+    main()

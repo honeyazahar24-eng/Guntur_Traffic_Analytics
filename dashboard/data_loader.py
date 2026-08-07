@@ -1,6 +1,8 @@
 import sqlite3
 import pandas as pd
 
+from pathlib import Path
+
 try:
     from dashboard.config import DATABASE_PATH
 except ImportError:
@@ -11,14 +13,18 @@ class DataLoader:
 
     def __init__(self):
 
-        self.database = DATABASE_PATH
+        self.database = Path(DATABASE_PATH).resolve()
 
     def load_data(self):
 
+        if not self.database.exists():
+            return pd.DataFrame()
+
+        db_str = str(self.database)
         try:
-            connection = sqlite3.connect(f"file:{self.database}?mode=ro", uri=True, timeout=30.0)
+            connection = sqlite3.connect(f"file:{self.database.as_posix()}?mode=ro", uri=True, timeout=30.0)
         except Exception:
-            connection = sqlite3.connect(self.database, timeout=30.0)
+            connection = sqlite3.connect(db_str, timeout=30.0)
 
         cursor = connection.cursor()
 
@@ -52,4 +58,5 @@ class DataLoader:
             connection.close()
 
         return df
+
 

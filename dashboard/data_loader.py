@@ -15,12 +15,10 @@ class DataLoader:
 
     def load_data(self):
 
-        connection = sqlite3.connect(self.database, timeout=30.0)
         try:
-            connection.execute("PRAGMA journal_mode=WAL;")
+            connection = sqlite3.connect(f"file:{self.database}?mode=ro", uri=True, timeout=30.0)
         except Exception:
-            pass
-
+            connection = sqlite3.connect(self.database, timeout=30.0)
 
         query = """
         SELECT *
@@ -29,8 +27,11 @@ class DataLoader:
                  collection_time DESC
         """
 
-        df = pd.read_sql(query, connection)
+        try:
+            df = pd.read_sql_query(query, connection)
+        except Exception:
+            df = pd.read_sql(query, connection)
 
         connection.close()
 
-        return df
+        return df

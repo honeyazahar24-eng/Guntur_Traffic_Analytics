@@ -15,7 +15,12 @@ class DataLoader:
 
     def load_data(self):
 
-        connection = sqlite3.connect(self.database)
+        connection = sqlite3.connect(self.database, timeout=30.0)
+        try:
+            connection.execute("PRAGMA journal_mode=WAL;")
+        except Exception:
+            pass
+
 
         query = """
         SELECT *

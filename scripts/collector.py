@@ -100,9 +100,37 @@ def main():
 
     database.close()
 
+    # Update scheduler_status.json with IST timestamp
+    try:
+        import json
+        ist_tz = timezone(timedelta(hours=5, minutes=30))
+        now_ist = datetime.now(ist_tz)
+
+        
+        status_file = project_root / "logs" / "scheduler_status.json"
+        status_file.parent.mkdir(exist_ok=True)
+        
+        check_db = TrafficDatabase()
+        check_db.cursor.execute("SELECT COUNT(*) FROM traffic_data")
+        total_records = check_db.cursor.fetchone()[0]
+        check_db.close()
+
+        status_data = {
+            "status": "success",
+            "message": f"Last successful run at {now_ist.strftime('%Y-%m-%d %H:%M:%S IST')} — {total_records} total records",
+            "last_run": now_ist.strftime("%Y-%m-%d %H:%M:%S IST"),
+            "last_record_count": total_records,
+            "next_run": "Every 30 min (:00 & :30 IST)"
+        }
+        with open(status_file, "w", encoding="utf-8") as f:
+            json.dump(status_data, f, indent=2)
+    except Exception:
+        pass
+
     print("\n" + "=" * 80)
     print("Traffic Collection Completed Successfully")
     print("=" * 80)
+
 
 
 if __name__ == "__main__":

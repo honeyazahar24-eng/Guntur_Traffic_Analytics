@@ -10,11 +10,18 @@ class TrafficDatabase:
 
         db_path = project_root / "database" / "traffic.db"
 
-        self.connection = sqlite3.connect(db_path)
+        self.connection = sqlite3.connect(db_path, timeout=30.0)
 
         self.cursor = self.connection.cursor()
+        try:
+            self.cursor.execute("PRAGMA busy_timeout=30000;")
+            self.cursor.execute("PRAGMA journal_mode=WAL;")
+        except Exception:
+            pass
 
         self.create_table()
+
+
 
     def create_table(self):
 

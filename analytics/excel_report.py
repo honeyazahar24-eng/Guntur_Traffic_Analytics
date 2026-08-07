@@ -90,7 +90,8 @@ def main():
         / "Guntur_Traffic_Report.xlsx"
     )
 
-    connection = sqlite3.connect(db_path)
+    connection = sqlite3.connect(db_path, timeout=30.0)
+
 
     raw_df = pd.read_sql_query(
         "SELECT * FROM traffic_data",

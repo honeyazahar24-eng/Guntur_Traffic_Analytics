@@ -1,7 +1,7 @@
 {
   "status": "success",
-  "message": "Last successful run at 2026-09-11 00:47:48 IST \u2014 4561 total records",
-  "last_run": "2026-09-11 00:47:48 IST",
+  "message": "Last successful run at 2026-09-11 03:25:56 IST \u2014 4561 total records",
+  "last_run": "2026-09-11 03:25:56 IST",
   "last_record_count": 4561,
   "next_run": "Every 30 min (:00 & :30 IST)"
 }
